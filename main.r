@@ -33,17 +33,16 @@ for (device in 1:length(collar_list))
   dat$jday=as.POSIXlt(as.POSIXct(dat$DT, tz="Canada/Alberta", format="%Y-%m-%d %H:%M:%S"), tz="Canada/Alberta")$yday+1
   calendar_temp$CurSnoPOS = as.POSIXlt(as.POSIXct(calendar_temp$CurSno, tz="Canada/Alberta", format="%Y-%m-%d"), tz="Canada/Alberta")$yday+1
   calendar_temp$NxtSnoPOS = as.POSIXlt(as.POSIXct(calendar_temp$NxtSno, tz="Canada/Alberta", format="%Y-%m-%d"), tz="Canada/Alberta")$yday+1  
+##Create a working dataframe
+
 ##For an individual snow event in 1:number of snow events the device encountered...
   for (snowevent in 1:nrow(calendar_temp))
   {
-##For the length of the individual device...
-    for (j in nrow(dat))
-    {
-##Is the jday within range of the event (between CurSnoPOS and NxtSnoPOS)?
-      if((dat$jday[j] >= calendar_temp$CurSnoPOS[snowevent]) && (dat$jday[j] <= calendar_temp$NxtSnoPOS[snowevent]))
-##Update if true.
-          {dat$event[j] <- snowevent} else { dat$event[j] <- dat$event[j]}
-    }
+##subset all days that are above or equal to the date of snow, and below or equal to the date of the next snow.
+    dat_temp = subset(dat,subset = (jday >= calendar_temp$CurSnoPOS[snowevent]) & (jday <= calendar_temp$NxtSnoPOS[snowevent]))
+    dat_temp$event=rep(snowevent,nrow(dat_temp))
+##write to disk because, yeah, I like to work with files.
+    write.table(dat_temp, file = paste(c("snowevent/",dat_temp$Device_ID[1],"_",snowevent,".txt"),collapse = ""), sep = "\t")
   }
 ##Once the stuff is coded by event, I will probably a) write to disk, b) subset the dat according to LEVELS and then c) go from 1:length running MCP from adehabitatHR   
 }
